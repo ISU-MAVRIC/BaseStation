@@ -11,7 +11,10 @@ joystick.init()
 
 def getJoyVal( axis ):
     "this function returns the value of a joystick, given an axis and a joystick number"
-    value = joystick.get_axis(axis)
+    if abs(joystick.get_axis(axis))>0.2:
+        value = joystick.get_axis(axis)
+    else:
+        value = 0.0
     return value
 
 while done==False:
