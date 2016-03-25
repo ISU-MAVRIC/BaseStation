@@ -17,7 +17,10 @@ def getJoyVal( axis ):
         Value = joystick.get_axis(axis)
     else:
         Value = 0.0
-    return Value
+    #map (-1 to 1) to (0.10 to 0.20) for PWM
+    pwm = (0.05*Value)+0.15
+    fpwm = '{:4.4}'.format(pwm)
+    return fpwm
 
 def getButtonVal():
     return 0
@@ -34,11 +37,18 @@ while 1:
     pygame.event.get()
 
 
-    x = getJoyVal(0)
-    y = getJoyVal(1)
+    x1 = getJoyVal(0)
+    y1 = getJoyVal(1)
+    x2 = getJoyVal(4)
+    y2 = getJoyVal(3)
+    z=[float(x1),float(y1),float(x2),float(y2)]
+
+
+
 
     ser.write("The value   :")
-    ser.write(str(x))
-    time.sleep(0.5)
+    ser.write(str(z))
+    print(z)
+    time.sleep(1)
 
     #ser.close()
