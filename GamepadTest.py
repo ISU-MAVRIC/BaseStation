@@ -41,14 +41,15 @@ while 1:
     y1 = getJoyVal(1)
     x2 = getJoyVal(4)
     y2 = getJoyVal(3)
-    z=[float(x1),float(y1),float(x2),float(y2)]
+    z = x1+' '+y1+' '+x2+' '+y2+'\n'
+    #z=[float(x1),float(y1),float(x2),float(y2)]
 
 
 
 
-    ser.write("The value   :")
+    ser.write("<")
     ser.write(str(z))
     print(z)
-    time.sleep(1)
+    time.sleep(3)
 
     #ser.close()

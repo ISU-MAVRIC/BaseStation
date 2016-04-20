@@ -9,7 +9,7 @@ int main ()
   float f1, f2;
   f1 = strtof (szOrbits, &pEnd);
   f2 = strtof (pEnd, NULL);
-  printf("%f",f1);
+  printf("%f\n",f1);
   printf("%f",f2);
   return 0;
 }
