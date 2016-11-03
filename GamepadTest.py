@@ -58,7 +58,7 @@ def getState(button):
         lastButton = 0
 
 
-ser = serial.Serial('COM9', 9600)  # open first serial port
+ser = serial.Serial('COM4', 9600)  # open first serial port
 #print ser.portstr       # check which port was really used
 #ser.write("<@@@>")      # write a string
 #ser.close()
@@ -76,8 +76,8 @@ while 1:
 
 #if getState == 0:
     my_bytes.append(60)
-    my_bytes.append(getJoyVal(joystickWheels, 1, 0.08))       #1 lwheel, axis 3
-    my_bytes.append(getJoyVal(joystickWheels, 3, 0.08))       #2 rwheel, axis 1
+    my_bytes.append(getJoyVal(joystickWheels,1,0.05))         #1 left wheels
+    my_bytes.append(getJoyVal(joystickWheels,3,0.05))         #2 right wheels
     my_bytes.append(getHat('x',joystickWheels,0))             #3 cam pan, wheels hat
     my_bytes.append(getHat('y',joystickWheels,0))             #4 cam tilt, wheels hat
     if(joystickWheels.get_button(7) == 1):
