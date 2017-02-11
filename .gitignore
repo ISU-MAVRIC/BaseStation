@@ -1,0 +1,6 @@
+*Debug*
+*bin*
+*.exe*
+*.dll
+*resw
+*.lock*
