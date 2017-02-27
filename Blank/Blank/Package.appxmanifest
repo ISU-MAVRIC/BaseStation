@@ -7,15 +7,15 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="c44f479f-4983-4875-aed6-d6562917be8f"
-    Publisher="CN=Celia"
+    Name="3a581b1d-2beb-4173-ac89-e436b5f093b7"
+    Publisher="CN=Talonj123"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="c44f479f-4983-4875-aed6-d6562917be8f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="3a581b1d-2beb-4173-ac89-e436b5f093b7" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>xbox attempt</DisplayName>
-    <PublisherDisplayName>Celia</PublisherDisplayName>
+    <DisplayName>Blank</DisplayName>
+    <PublisherDisplayName>Talonj123</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -30,12 +30,12 @@
   <Applications>
     <Application Id="App"
       Executable="$targetnametoken$.exe"
-      EntryPoint="xbox_attempt.App">
+      EntryPoint="Blank.App">
       <uap:VisualElements
-        DisplayName="xbox attempt"
+        DisplayName="Blank"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png"
-        Description="xbox attempt"
+        Description="Blank"
         BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
@@ -45,5 +45,10 @@
 
   <Capabilities>
     <Capability Name="internetClient" />
+    <DeviceCapability Name="serialcommunication">
+      <Device Id="any">
+        <Function Type="name:serialPort"/>
+      </Device>
+    </DeviceCapability>
   </Capabilities>
 </Package>

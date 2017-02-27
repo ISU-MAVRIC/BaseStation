@@ -4,20 +4,20 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProjectGuid>{e056c106-e0a2-41a8-b38c-f718f90f15a5}</ProjectGuid>
+    <ProjectGuid>{76611d29-8e22-4738-bd38-5c2a357f5023}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>xbox_attempt</RootNamespace>
-    <AssemblyName>xbox attempt</AssemblyName>
+    <RootNamespace>Blank</RootNamespace>
+    <AssemblyName>Blank</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion>10.0.14393.0</TargetPlatformVersion>
-    <TargetPlatformMinVersion>10.0.10586.0</TargetPlatformMinVersion>
+    <TargetPlatformVersion>10.0.10240.0</TargetPlatformVersion>
+    <TargetPlatformMinVersion>10.0.10240.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{A5A43C5B-DE2A-4C0C-9213-0A381AF9435A};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     
-    <PackageCertificateKeyFile>xbox attempt_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>Blank_TemporaryKey.pfx</PackageCertificateKeyFile>
     
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
@@ -107,7 +107,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     
-    <None Include="xbox attempt_TemporaryKey.pfx" />
+    <None Include="Blank_TemporaryKey.pfx" />
     
   </ItemGroup>
   <ItemGroup>
