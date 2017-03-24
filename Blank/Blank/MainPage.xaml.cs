@@ -19,6 +19,7 @@ using Windows.UI.Xaml.Navigation;
 
 using Windows.Gaming.Input;
 using System.Threading.Tasks;
+using Windows.Storage.Streams;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -64,8 +65,18 @@ namespace Blank
             comPort.BaudRate = 9600;
             comPort.DataBits = 8;
             comPort.StopBits = SerialStopBitCount.One;
+            comPort.Parity = SerialParity.None;
 
-            intervalUpdate = new Timer(UpdateRover, null, 1000, 1);
+            Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                while (true)
+                {
+                    IBuffer buff = new byte[] { 0, 0 }.AsBuffer();
+                    var task = comPort.OutputStream.WriteAsync(buff);
+                    Task.Delay(200).Wait();
+                }
+            });
+            //intervalUpdate = new Timer(UpdateRover, null, 1000, 20);
         }
 
         enum RoverState
@@ -73,23 +84,25 @@ namespace Blank
             Up = 1, Down = 2
         }
 
-        byte[] packet = new byte[] { (byte)'<', 127, 127, 127, 127, 127, 127, (byte)'>' };
-        private void UpdateRover(object unused_variable_here)
+        private void DoArm()
         {
-            if (ArmController == null && DriveController == null)
-            {
-                GetControllers();
-            }
             if (ArmController != null)
             {
                 GamepadReading reading = ArmController.GetCurrentReading();
+                if (reading.LeftThumbstickX == 0 &&
+                    reading.LeftThumbstickY == 0 &&
+                    reading.RightThumbstickX == 0 &&
+                    reading.RightThumbstickY == 0)
+                {
+                    return;
+                }
                 double fArmUpper = ((-reading.RightThumbstickY + 1) / 2) * 500 + 70;
                 if (fArmUpper > 255)
                 {
                     fArmUpper = 255;
                 }
 
-                double fArmLower = ((-reading.RightThumbstickX + 1) / 2) * 650 + 120;
+                double fArmLower = ((-reading.RightThumbstickX + 1) / 2) * 650-70;
                 if (fArmLower > 255)
                 {
                     fArmLower = 255;
@@ -110,81 +123,142 @@ namespace Blank
                 byte Pan = (byte)fPan;
                 byte Pitch = (byte)fPitch;
                 //Debug.WriteLine($"{actuator}");
-                Debug.WriteLine($"{Pan}");
+                //Debug.WriteLine($"{Pan}");
                 //Debug.WriteLine($"{reading.LeftThumbstickX}, {reading.LeftThumbstickY}, {reading.RightThumbstickX}, {reading.RightThumbstickY}, {reading.RightTrigger}, {reading.LeftTrigger}");
                 packet[3] = ArmLower;
                 packet[4] = ArmUpper;
                 packet[5] = Pan;
                 packet[6] = Pitch;
-
+                Debug.WriteLine($"{ArmUpper}, {ArmLower}");
             }
             else
             {
                 // Do nothing to arm
             }
+        }
+
+        private void DoDrive()
+        {
             if (DriveController != null)
             {
                 GamepadReading reading = DriveController.GetCurrentReading();
+                //if (reading.LeftThumbstickX == 0 &&
+                //    reading.LeftThumbstickY == 0 &&
+                //    reading.RightThumbstickX == 0 &&
+                //    reading.RightThumbstickY == 0)
+                //{
+                //    return;
+                //}
                 double speed = reading.LeftThumbstickY;
                 double turn = reading.LeftThumbstickX;
-                double right = speed + turn;
-                double left = speed - turn;
+                double right = reading.RightThumbstickY;
+                double left = reading.LeftThumbstickY;
+                if (left > 255)
+                {
+                    left = 255;
+                }
+                if (right > 255)
+                {
+                    left = 255;
+                }
+                if (Math.Abs(left) < 0.10)
+                {
+                    left = 0;
+                }
+                if (Math.Abs(right) < 0.10)
+                {
+                    right = 0;
+                }
                 packet[1] = (byte)(((right + 1) / 2) * 255);
                 packet[2] = (byte)(((left + 1) / 2) * 255);
+                Debug.WriteLine($"{packet[1]}, {packet[2]}");
             }
             else
             {
                 packet[1] = 127;
                 packet[2] = 127;
             }
-            //Debug.WriteLine($"{ArmUpper}, {ArmLower}");
-            var task = comPort.OutputStream.WriteAsync(packet.AsBuffer());
-            var vib = ArmController.Vibration;
-            vib.LeftMotor = 0.1;
-            ArmController.Vibration = vib;
+        }
+
+        byte[] packet = new byte[] { (byte)'<', 127, 127, 255, 255, 127, 127, (byte)'>' };
+        bool inUse = false;
+        private void UpdateRover(object unused_variable_here)
+        {
+            if (!Monitor.TryEnter(this))
+            {
+                return;
+            }
+            lock (this)
+            {
+                if (inUse)
+                {
+                    return;
+                }
+                inUse = true;
+                if (ArmController == null && DriveController == null)
+                {
+                    GetControllers();
+                }
+                DoArm();
+                DoDrive();
+                foreach (byte b in packet)
+                {
+                    var task = comPort.OutputStream.WriteAsync(new byte[] { b }.AsBuffer());
+                    while (task.Status != AsyncStatus.Completed) ;
+                }
+            }
+            Task.Delay(1).Wait();
+            inUse = false;
         }
 
         private void GetControllers()
         {
-            while (Gamepad.Gamepads.Count < 1)
-                ;
-            Task.Delay(100).Wait();
-            Gamepad g1 = Gamepad.Gamepads[0];
-            if (Gamepad.Gamepads.Count > 1)
+            lock (this)
             {
-                Gamepad g2 = Gamepad.Gamepads[1];
-
-                while (true)
+                if (DriveController != null || ArmController != null)
                 {
-                    GamepadReading r1 = g1.GetCurrentReading();
-                    GamepadReading r2 = g2.GetCurrentReading();
-                    Debug.WriteLine($"{r1.Buttons}, {r2.Buttons}");
-                    if (r1.Buttons != 0)
+                    return;
+                }
+                while (Gamepad.Gamepads.Count < 1)
+                    ;
+                Task.Delay(100).Wait();
+                Gamepad g1 = Gamepad.Gamepads[0];
+                if (Gamepad.Gamepads.Count > 1)
+                {
+                    Gamepad g2 = Gamepad.Gamepads[1];
+
+                    while (true)
                     {
-                        ArmController = g2;
-                        DriveController = g1;
-                        break;
-                    }
-                    else if (r2.Buttons != 0)
-                    {
-                        ArmController = g1;
-                        DriveController = g2;
-                        break;
+                        GamepadReading r1 = g1.GetCurrentReading();
+                        GamepadReading r2 = g2.GetCurrentReading();
+                        Debug.WriteLine($"{r1.Buttons}, {r2.Buttons}");
+                        if (r1.Buttons != 0)
+                        {
+                            ArmController = g2;
+                            DriveController = g1;
+                            break;
+                        }
+                        else if (r2.Buttons != 0)
+                        {
+                            ArmController = g1;
+                            DriveController = g2;
+                            break;
+                        }
                     }
                 }
-            }
-            else
-            {
-                ArmController = g1;
-                for (int i = 0; i < 100; i++)
+                else
                 {
-                    if (g1.GetCurrentReading().Buttons != 0)
+                    ArmController = g1;
+                    for (int i = 0; i < 1000; i++)
                     {
-                        ArmController = null;
-                        DriveController = g1;
-                        break;
+                        if (g1.GetCurrentReading().Buttons != 0)
+                        {
+                            ArmController = null;
+                            DriveController = g1;
+                            break;
+                        }
+                        Task.Delay(10).Wait();
                     }
-                    Task.Delay(10).Wait();
                 }
             }
         }

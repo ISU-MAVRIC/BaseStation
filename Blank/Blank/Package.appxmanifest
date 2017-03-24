@@ -7,7 +7,7 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="3a581b1d-2beb-4173-ac89-e436b5f093b7"
+    Name="MAVRIC-BaseStation"
     Publisher="CN=Talonj123"
     Version="1.0.0.0" />
 
