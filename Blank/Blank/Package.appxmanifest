@@ -4,7 +4,8 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  IgnorableNamespaces="uap mp">
+  xmlns:iot="http://schemas.microsoft.com/appx/manifest/iot/windows10"
+  IgnorableNamespaces="uap mp iot">
 
   <Identity
     Name="MAVRIC-BaseStation"
@@ -44,6 +45,7 @@
   </Applications>
 
   <Capabilities>
+    <iot:Capability Name="systemManagement" />
     <Capability Name="internetClient" />
     <DeviceCapability Name="serialcommunication">
       <Device Id="any">

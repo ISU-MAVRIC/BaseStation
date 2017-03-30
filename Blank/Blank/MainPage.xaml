@@ -8,6 +8,7 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <TextBlock>MAVRIC Base Station</TextBlock>
+        <TextBlock FontSize="36px">MAVRIC Base Station</TextBlock>
+        <Button HorizontalAlignment="Center" VerticalAlignment="Center" Click="PowerButton_Click">Turn Off</Button>
     </Grid>
 </Page>

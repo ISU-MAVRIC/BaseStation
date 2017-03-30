@@ -20,6 +20,8 @@ using Windows.UI.Xaml.Navigation;
 using Windows.Gaming.Input;
 using System.Threading.Tasks;
 using Windows.Storage.Streams;
+using Windows.System;
+using Windows.UI.Popups;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -53,30 +55,28 @@ namespace Blank
 
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
+            IEnumerable<DeviceInformation> UARTs;
+            do
+            {
+                do
+                {
+                    var serialSelector = SerialDevice.GetDeviceSelector();
+                    var devices_Task = DeviceInformation.FindAllAsync(serialSelector);
+                    while (devices_Task.Status != AsyncStatus.Completed) ;
+                    var devices = devices_Task.GetResults();
+                    UARTs = devices.Where(x => x.Name.Contains("UART"));
+                } while (UARTs.Count() <= 0);
 
-            var serialSelector = SerialDevice.GetDeviceSelector();
-            var devices_Task = DeviceInformation.FindAllAsync(serialSelector);
-            while (devices_Task.Status != AsyncStatus.Completed) ;
-            var devices = devices_Task.GetResults();
-            var UARTs = devices.Where(x => x.Name.Contains("UART"));
-            var comPort_Task = SerialDevice.FromIdAsync(UARTs.First().Id);
-            while (comPort_Task.Status != AsyncStatus.Completed) ;
-            comPort = comPort_Task.GetResults();
+                var comPort_Task = SerialDevice.FromIdAsync(UARTs.First().Id);
+                while (comPort_Task.Status != AsyncStatus.Completed) ;
+                comPort = comPort_Task.GetResults();
+            } while (comPort == null);
             comPort.BaudRate = 9600;
             comPort.DataBits = 8;
             comPort.StopBits = SerialStopBitCount.One;
             comPort.Parity = SerialParity.None;
 
-            Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                while (true)
-                {
-                    IBuffer buff = new byte[] { 0, 0 }.AsBuffer();
-                    var task = comPort.OutputStream.WriteAsync(buff);
-                    Task.Delay(200).Wait();
-                }
-            });
-            //intervalUpdate = new Timer(UpdateRover, null, 1000, 20);
+            intervalUpdate = new Timer(UpdateRover, null, 1000, 20);
         }
 
         enum RoverState
@@ -129,7 +129,7 @@ namespace Blank
                 packet[4] = ArmUpper;
                 packet[5] = Pan;
                 packet[6] = Pitch;
-                Debug.WriteLine($"{ArmUpper}, {ArmLower}");
+                Debug.WriteLine($"{ArmLower} {ArmUpper}");
             }
             else
             {
@@ -201,11 +201,13 @@ namespace Blank
                 }
                 DoArm();
                 DoDrive();
-                foreach (byte b in packet)
-                {
-                    var task = comPort.OutputStream.WriteAsync(new byte[] { b }.AsBuffer());
-                    while (task.Status != AsyncStatus.Completed) ;
-                }
+                //foreach (byte b in packet)
+                //{
+                //    var task = comPort.OutputStream.WriteAsync(new byte[] { b }.AsBuffer());
+                //    while (task.Status != AsyncStatus.Completed) ;
+                //}
+                var task = comPort.OutputStream.WriteAsync(packet.AsBuffer());
+                while (task.Status != AsyncStatus.Completed) ;
             }
             Task.Delay(1).Wait();
             inUse = false;
@@ -260,6 +262,18 @@ namespace Blank
                         Task.Delay(10).Wait();
                     }
                 }
+            }
+        }
+
+        private void PowerButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ShutdownManager.BeginShutdown(ShutdownKind.Shutdown, TimeSpan.FromSeconds(0));
+            }
+            catch (Exception ex)
+            {
+                new MessageDialog("Are you running on an IoT core device? Shutdown only works there.\n" + ex.Message, "Could not shhutdown").ShowAsync().AsTask().Wait();
             }
         }
     }
