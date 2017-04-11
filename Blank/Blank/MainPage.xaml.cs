@@ -76,7 +76,8 @@ namespace Blank
             comPort.StopBits = SerialStopBitCount.One;
             comPort.Parity = SerialParity.None;
 
-            intervalUpdate = new Timer(UpdateRover, null, 1000, 20);
+            CameraStepTime = new Stopwatch();
+            intervalUpdate = new Timer(UpdateRover, null, 1000, 6);
         }
 
         enum RoverState
@@ -129,7 +130,8 @@ namespace Blank
                 packet[4] = ArmUpper;
                 packet[5] = Pan;
                 packet[6] = Pitch;
-                Debug.WriteLine($"{ArmLower} {ArmUpper}");
+                //Debug.WriteLine($"{ArmLower} {ArmUpper}");
+                //Debug.WriteLine($"{Pitch}");
             }
             else
             {
@@ -137,6 +139,7 @@ namespace Blank
             }
         }
 
+        GamepadReading prevDriveReading;
         private void DoDrive()
         {
             if (DriveController != null)
@@ -171,7 +174,39 @@ namespace Blank
                 }
                 packet[1] = (byte)(((right + 1) / 2) * 255);
                 packet[2] = (byte)(((left + 1) / 2) * 255);
-                Debug.WriteLine($"{packet[1]}, {packet[2]}");
+                //Debug.WriteLine($"{packet[1]}, {packet[2]}");
+
+                if (CameraStepTime.ElapsedMilliseconds >= 10)
+                {
+                    if (reading.Buttons.HasFlag(GamepadButtons.DPadLeft))
+                    {
+                        packet[7]++;
+                        CameraStepTime.Restart();
+                    }
+                    if (reading.Buttons.HasFlag(GamepadButtons.DPadRight))
+                    {
+                        packet[7]--;
+                        CameraStepTime.Restart();
+                    }
+                    if (reading.Buttons.HasFlag(GamepadButtons.DPadDown))
+                    {
+                        packet[8]--;
+                        CameraStepTime.Restart();
+                    }
+                    if (reading.Buttons.HasFlag(GamepadButtons.DPadUp))
+                    {
+                        packet[8]++;
+                        CameraStepTime.Restart();
+                    }
+                }
+                if (!CameraStepTime.IsRunning)
+                {
+                    CameraStepTime.Start();
+                }
+
+                //Debug.WriteLine($"{packet[7]}, {packet[8]}");
+
+                prevDriveReading = reading;
             }
             else
             {
@@ -180,7 +215,8 @@ namespace Blank
             }
         }
 
-        byte[] packet = new byte[] { (byte)'<', 127, 127, 255, 255, 127, 127, (byte)'>' };
+        Stopwatch CameraStepTime;
+        byte[] packet = new byte[] { (byte)'<', 127, 127, 255, 255, 127, 127, 127, 127, (byte)'>' };
         bool inUse = false;
         private void UpdateRover(object unused_variable_here)
         {
@@ -251,7 +287,7 @@ namespace Blank
                 else
                 {
                     ArmController = g1;
-                    for (int i = 0; i < 1000; i++)
+                    for (int i = 0; i < 200; i++)
                     {
                         if (g1.GetCurrentReading().Buttons != 0)
                         {
