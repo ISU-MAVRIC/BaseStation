@@ -10,5 +10,14 @@
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <TextBlock FontSize="36px">MAVRIC Base Station</TextBlock>
         <Button HorizontalAlignment="Center" VerticalAlignment="Center" Click="PowerButton_Click">Turn Off</Button>
+        <Grid HorizontalAlignment="Left" Height="140" Margin="10,50,0,0" VerticalAlignment="Top" Width="369">
+            <Slider x:Name="ArmUpperSlider" Header="ArmUpper" HorizontalAlignment="Left" VerticalAlignment="Top" Width="229" Margin="10,10,10,10" ValueChanged="ArmUpperSlider_ValueChanged" PointerCaptureLost="DifferentialSlider_PointerReleased" PointerCanceled="DifferentialSlider_PointerReleased" PointerReleased="DifferentialSlider_PointerReleased" Maximum="255" Minimum="0" Value="127"/>
+            <Slider x:Name="ArmLowerSlider" Header="ArmLower" HorizontalAlignment="Left" VerticalAlignment="Top" Width="229" Margin="10,70,10,10" ValueChanged="ArmLowerSlider_ValueChanged" PointerCaptureLost="DifferentialSlider_PointerReleased" PointerCanceled="DifferentialSlider_PointerReleased" PointerReleased="DifferentialSlider_PointerReleased" Maximum="255" Minimum="0" Value="127"/>
+        </Grid>
+        <Grid HorizontalAlignment="Left" Height="286" Margin="800,50,0,0" VerticalAlignment="Top" Width="195">
+            <Slider x:Name="SSArmSlider"   Header="Arm Height"  Orientation="Vertical"   HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Height="200" Margin="10,10,10,10"  ValueChanged="SSArmSlider_ValueChanged"   PointerCaptureLost="DifferentialSlider_PointerReleased" PointerCanceled="DifferentialSlider_PointerReleased" PointerReleased="DifferentialSlider_PointerReleased" Maximum="255" Minimum="0" Value="127"/>
+            <Slider x:Name="SSDepthSlider" Header="Drill Depth" Orientation="Vertical"   HorizontalAlignment="Left" VerticalAlignment="Top" Width="100" Height="200" Margin="110,10,10,10" ValueChanged="SSDepthSlider_ValueChanged" PointerCaptureLost="DifferentialSlider_PointerReleased" PointerCanceled="DifferentialSlider_PointerReleased" PointerReleased="DifferentialSlider_PointerReleased" Maximum="255" Minimum="0" Value="127"/>
+            <Slider x:Name="SSDrillSlider" Header="Drill"       Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Width="175" Height="60"  Margin="10,210,0,0"   ValueChanged="SSDrillSlider_ValueChanged" PointerCaptureLost="DifferentialSlider_PointerReleased" PointerCanceled="DifferentialSlider_PointerReleased" PointerReleased="DifferentialSlider_PointerReleased" Maximum="255" Minimum="0" Value="127"/>
+        </Grid>
     </Grid>
 </Page>

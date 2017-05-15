@@ -77,7 +77,15 @@ namespace Blank
             comPort.Parity = SerialParity.None;
 
             CameraStepTime = new Stopwatch();
-            intervalUpdate = new Timer(UpdateRover, null, 1000, 6);
+            Task.Run(()=> {
+                while (true)
+                {
+                    var delay = Task.Delay(5);
+                    while (!delay.IsCompleted) ;
+                    UpdateRover();
+                }
+            });
+            //intervalUpdate = new Timer(UpdateRover, null, 1000, 6);
         }
 
         enum RoverState
@@ -204,6 +212,18 @@ namespace Blank
                     CameraStepTime.Start();
                 }
 
+                if (reading.Buttons.HasFlag(GamepadButtons.A) && !prevDriveReading.Buttons.HasFlag(GamepadButtons.A))
+                { // A pressed
+                    if (packet[10] <= 64)
+                    {
+                        packet[10] = 255;
+                    }
+                    else
+                    {
+                        packet[10] = 64;
+                    }
+                }
+
                 //Debug.WriteLine($"{packet[7]}, {packet[8]}");
 
                 prevDriveReading = reading;
@@ -216,37 +236,32 @@ namespace Blank
         }
 
         Stopwatch CameraStepTime;
-        byte[] packet = new byte[] { (byte)'<', 127, 127, 255, 255, 127, 127, 127, 127, (byte)'>' };
-        bool inUse = false;
-        private void UpdateRover(object unused_variable_here)
+        byte[] packet = new byte[] { (byte)'<', 127, 127, 255, 255, 127, 127, 127, 127, 127, 127, 127, 127, 127, (byte)'>' };
+        enum PacketIndex : int
         {
-            if (!Monitor.TryEnter(this))
+            Right = 1,
+            Left = 2,
+            ArmLower = 3,
+            ArmUpper = 4,
+            ClawPan = 5,
+            ClawPitch = 6,
+
+        }
+        private void UpdateRover()
+        {
+            if (ArmController == null && DriveController == null)
             {
-                return;
+                GetControllers();
             }
-            lock (this)
-            {
-                if (inUse)
-                {
-                    return;
-                }
-                inUse = true;
-                if (ArmController == null && DriveController == null)
-                {
-                    GetControllers();
-                }
-                DoArm();
-                DoDrive();
-                //foreach (byte b in packet)
-                //{
-                //    var task = comPort.OutputStream.WriteAsync(new byte[] { b }.AsBuffer());
-                //    while (task.Status != AsyncStatus.Completed) ;
-                //}
-                var task = comPort.OutputStream.WriteAsync(packet.AsBuffer());
-                while (task.Status != AsyncStatus.Completed) ;
-            }
-            Task.Delay(1).Wait();
-            inUse = false;
+            DoArm();
+            DoDrive();
+            //foreach (byte b in packet)
+            //{
+            //    var task = comPort.OutputStream.WriteAsync(new byte[] { b }.AsBuffer());
+            //    while (task.Status != AsyncStatus.Completed) ;
+            //}
+            var task = comPort.OutputStream.WriteAsync(packet.AsBuffer());
+            while (task.Status != AsyncStatus.Completed) ;
         }
 
         private void GetControllers()
@@ -311,6 +326,40 @@ namespace Blank
             {
                 new MessageDialog("Are you running on an IoT core device? Shutdown only works there.\n" + ex.Message, "Could not shhutdown").ShowAsync().AsTask().Wait();
             }
+        }
+
+        private void DifferentialSlider_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            Slider source = sender as Slider;
+            if (source != null)
+            {
+                source.Value = 127;
+            }
+        }
+
+        private void ArmUpperSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[4] = (byte)ArmUpperSlider.Value;
+        }
+
+        private void ArmLowerSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[3] = (byte)ArmLowerSlider.Value;
+        }
+
+        private void SSArmSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[11] = (byte)SSArmSlider.Value;
+        }
+
+        private void SSDepthSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[12] = (byte)SSDepthSlider.Value;
+        }
+
+        private void SSDrillSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[13] = (byte)SSDrillSlider.Value;
         }
     }
 }
