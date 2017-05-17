@@ -134,10 +134,10 @@ namespace Blank
                 //Debug.WriteLine($"{actuator}");
                 //Debug.WriteLine($"{Pan}");
                 //Debug.WriteLine($"{reading.LeftThumbstickX}, {reading.LeftThumbstickY}, {reading.RightThumbstickX}, {reading.RightThumbstickY}, {reading.RightTrigger}, {reading.LeftTrigger}");
-                packet[3] = ArmLower;
-                packet[4] = ArmUpper;
-                packet[5] = Pan;
-                packet[6] = Pitch;
+                packet[(int)PacketIndex.ArmLower] = ArmLower;
+                packet[(int)PacketIndex.ArmUpper] = ArmUpper;
+                packet[(int)PacketIndex.ClawPan] = Pan;
+                packet[(int)PacketIndex.ClawPitch] = Pitch;
                 //Debug.WriteLine($"{ArmLower} {ArmUpper}");
                 //Debug.WriteLine($"{Pitch}");
             }
@@ -180,30 +180,30 @@ namespace Blank
                 {
                     right = 0;
                 }
-                packet[1] = (byte)(((right + 1) / 2) * 255);
-                packet[2] = (byte)(((left + 1) / 2) * 255);
-                //Debug.WriteLine($"{packet[1]}, {packet[2]}");
+                packet[(int)PacketIndex.Right] = (byte)(((right + 1) / 2) * 255);
+                packet[(int)PacketIndex.Left] = (byte)(((left + 1) / 2) * 255);
+                //Debug.WriteLine($"{packet[(int)PacketIndex.Right]}, {packet[(int)PacketIndex.Left]}");
 
                 if (CameraStepTime.ElapsedMilliseconds >= 10)
                 {
                     if (reading.Buttons.HasFlag(GamepadButtons.DPadLeft))
                     {
-                        packet[7]++;
+                        packet[(int)PacketIndex.CameraPan]++;
                         CameraStepTime.Restart();
                     }
                     if (reading.Buttons.HasFlag(GamepadButtons.DPadRight))
                     {
-                        packet[7]--;
+                        packet[(int)PacketIndex.CameraPan]--;
                         CameraStepTime.Restart();
                     }
                     if (reading.Buttons.HasFlag(GamepadButtons.DPadDown))
                     {
-                        packet[8]--;
+                        packet[(int)PacketIndex.CameraPitch]--;
                         CameraStepTime.Restart();
                     }
                     if (reading.Buttons.HasFlag(GamepadButtons.DPadUp))
                     {
-                        packet[8]++;
+                        packet[(int)PacketIndex.CameraPitch]++;
                         CameraStepTime.Restart();
                     }
                 }
@@ -214,29 +214,31 @@ namespace Blank
 
                 if (reading.Buttons.HasFlag(GamepadButtons.A) && !prevDriveReading.Buttons.HasFlag(GamepadButtons.A))
                 { // A pressed
-                    if (packet[10] <= 64)
+                    if (packet[(int)PacketIndex.Claw] <= 200)
                     {
-                        packet[10] = 255;
+                        packet[(int)PacketIndex.Claw] = 242;
+                        Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ClawSlider.Value = 242; });
                     }
                     else
                     {
-                        packet[10] = 64;
+                        packet[(int)PacketIndex.Claw] = 120;
+                        Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => { ClawSlider.Value = 120; });
                     }
                 }
 
-                //Debug.WriteLine($"{packet[7]}, {packet[8]}");
+                //Debug.WriteLine($"{packet[(int)PacketIndex.CameraPan]}, {packet[(int)PacketIndex.CameraPitch]}");
 
                 prevDriveReading = reading;
             }
             else
             {
-                packet[1] = 127;
-                packet[2] = 127;
+                packet[(int)PacketIndex.Right] = 127;
+                packet[(int)PacketIndex.Left] = 127;
             }
         }
 
         Stopwatch CameraStepTime;
-        byte[] packet = new byte[] { (byte)'<', 127, 127, 255, 255, 127, 127, 127, 127, 127, 127, 127, 127, 127, (byte)'>' };
+        byte[] packet = new byte[] { (byte)'<', 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, (byte)'>' };
         enum PacketIndex : int
         {
             Right = 1,
@@ -245,7 +247,14 @@ namespace Blank
             ArmUpper = 4,
             ClawPan = 5,
             ClawPitch = 6,
-
+            CameraPan = 7,
+            CameraPitch = 8,
+            ClawRotation = 9,
+            Claw = 10,
+            SSArm = 11,
+            SSDepth = 12,
+            SSDrill = 13,
+            ArmBase = 14,
         }
         private void UpdateRover()
         {
@@ -339,27 +348,52 @@ namespace Blank
 
         private void ArmUpperSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            packet[4] = (byte)ArmUpperSlider.Value;
+            packet[(int)PacketIndex.ArmUpper] = (byte)ArmUpperSlider.Value;
         }
 
         private void ArmLowerSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            packet[3] = (byte)ArmLowerSlider.Value;
+            packet[(int)PacketIndex.ArmLower] = (byte)ArmLowerSlider.Value;
         }
 
         private void SSArmSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            packet[11] = (byte)SSArmSlider.Value;
+            packet[(int)PacketIndex.SSArm] = (byte)SSArmSlider.Value;
         }
 
         private void SSDepthSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            packet[12] = (byte)SSDepthSlider.Value;
+            packet[(int)PacketIndex.SSDepth] = (byte)SSDepthSlider.Value;
         }
 
         private void SSDrillSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            packet[13] = (byte)SSDrillSlider.Value;
+            packet[(int)PacketIndex.SSDrill] = (byte)SSDrillSlider.Value;
+        }
+
+        private void ClawPanSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[(int)PacketIndex.ClawPan] = (byte)ClawPanSlider.Value;
+        }
+
+        private void ClawPitchSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[(int)PacketIndex.ClawPitch] = (byte)ClawPitchSlider.Value;
+        }
+
+        private void ClawRotationSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[(int)PacketIndex.ClawRotation] = (byte)ClawRotationSlider.Value;
+        }
+
+        private void BaseRotationSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[(int)PacketIndex.ArmBase] = (byte)BaseRotationSlider.Value;
+        }
+
+        private void ClawSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            packet[(int)PacketIndex.Claw] = (byte)ClawSlider.Value;
         }
     }
 }
